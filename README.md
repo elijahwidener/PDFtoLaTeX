@@ -22,10 +22,10 @@ To achieve the conversion goals, the project will leverage the power of GPT's or
    ```bash
    git clone https://github.com/your-username/pdf-word-to-latex.git
    ```
-2. Install the requiered dependencies
+2. Install the requiered dependencies:
   ```bash
   pip install -r requirements.txt
   ```
 
-##Contributing
+## Contributing
 Contributions to this project are welcome! If you have any ideas, suggestions, or bug reports, please open an issue or submit a pull request. Make sure to follow the project's coding guidelines and provide detailed information about your changes.
