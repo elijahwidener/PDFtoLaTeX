@@ -4,7 +4,7 @@ This project aims to develop a tool that converts PDF and Word document files in
 
 ## Approach
 
-To achieve the conversion goals, the project will leverage the power of GPT (Generative Pre-trained Transformer) or Claude's APIs. These APIs will be fine-tuned using custom datasets to enhance their performance and accuracy in converting specific types of documents.
+To achieve the conversion goals, the project will leverage the power of GPT's or Claude's APIs. These APIs will be fine-tuned using custom datasets to enhance their performance and accuracy in converting specific types of documents.
 
 ## Features
 
