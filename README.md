@@ -20,7 +20,7 @@ To achieve the conversion goals, the project will leverage the power of GPT's or
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/pdf-word-to-latex.git
+   git clone https://github.com/elijahwidener/PDFtoLaTeX.git
    ```
 2. Install the requiered dependencies:
   ```bash
