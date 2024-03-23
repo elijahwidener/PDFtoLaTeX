@@ -33,3 +33,6 @@ def parse_resume_sections(doc):
             for block in section:
                 print(block[4])  # Just printing the text for simplicity
             print("---")
+
+
+parse_resume_sections(doc)
