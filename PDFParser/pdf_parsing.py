@@ -34,7 +34,7 @@ def detect_section(block, average_font_size):
     return (is_larger_font or matches_pattern, section_title)
 
 
-def parse_resume_sections(doc):
+def parse_resume(doc):
     sections = {}
     current_section_title = "Initial"  # Start with a default section
     sections[current_section_title] = []  # Initialize the first section to accumulate blocks
@@ -65,9 +65,14 @@ def parse_resume_sections(doc):
                 print(block_text)  # Print accumulated text for each section
             print("---")
 
-def parse_sub_sections(section):
-    for block in section:
+
+
+def pase_sections(section_text):
+    """
+    Parse a section of text into a subsections
+    """
+    for text in section_text:
         pass
 
 
-parse_resume_sections(doc)
+parse_resume(doc)
