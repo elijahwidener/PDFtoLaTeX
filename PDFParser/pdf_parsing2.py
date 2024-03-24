@@ -134,11 +134,13 @@ def parse_resume(file_path):
                 text = span["text"].strip()
                 font_size = span["size"]
 
-            current_section = is_section_heading(line, avg_font_size)    
-            if current_section is not None:  
+            new_current_section = is_section_heading(line, avg_font_size)    
+            if new_current_section is not None and new_current_section is not current_section:  
                 resume_data["sections"][current_section] = []
                 current_subSection = None # Reset subsection for a new section found
                 # Note: This allows for immediate following text to be processed without skipping
+                # Note: We want to check if were at a new section for every line in case the block contains two sections
+
 
             # Check for dates within the text, indicating a subsection
             date_match = date_regex.search(text)
