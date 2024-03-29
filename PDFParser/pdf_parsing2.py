@@ -37,7 +37,7 @@ Text blocks are structured differently to provide detailed information about the
 
 
 
-resume_datas tructure
+resume_data structure
 │
 ├── top_section
 │   ├── name
@@ -63,55 +63,55 @@ resume_datas tructure
     ├── Default
     │   ├── [0]
     │   │   ├── text
-    │   │   ├── font
+    │   │   ├── font (if different from regular)
     │   │   ├── size
     │   │   ├── color
     │   │   └── flags
     │   ├── [1]
     │   │   ├── text
-    │   │   ├── font
+    │   │   ├── font (if different from regular)
     │   │   ├── size
     │   │   ├── color
     │   │   └── flags
     │   ├── ...
     │   └── [60]
     │       ├── text
-    │       ├── font
+    │       ├── font (if different from regular)
     │       ├── size
     │       ├── color
     │       └── flags
     ├── education
     │   └── [0]
     │       ├── text
-    │       ├── font
+    │       ├── font (if different from regular)
     │       ├── size
     │       ├── color
     │       └── flags
     ├── skills
     │   └── [0]
     │       ├── text
-    │       ├── font
+    │       ├── font (if different from regular)
     │       ├── size
     │       ├── color
     │       └── flags
     ├── languages
     │   └── [0]
     │       ├── text
-    │       ├── font
+    │       ├── font (if different from regular)
     │       ├── size
     │       ├── color
     │       └── flags
     ├── experience
     │   └── [0]
     │       ├── text
-    │       ├── font
+    │       ├── font (if different from regular)
     │       ├── size
     │       ├── color
     │       └── flags
     └── projects
         └── [0]
             ├── text
-            ├── font
+            ├── font (if different from regular)
             ├── size
             ├── color
             └── flags
@@ -132,11 +132,12 @@ def is_section_heading(line, avg_font_size):
     """Determines if a block is likely a section heading."""
     # Simplified logic: A heading might be identified by larger font size in its first line
     # More complex logic might consider bold text, position, etc.
-    pattern_match = "Default"
+    pattern_match = ""
     font_size = line["spans"][0]["size"]
     for key, pattern in patterns.items():
         if pattern.search(line["spans"][0]["text"]):
             pattern_match = key
+            break
 
     if pattern_match or font_size > avg_font_size:
         return pattern_match
@@ -212,9 +213,10 @@ def parse_resume(file_path):
         
 
         for line in block["lines"]:
+            line_text = ""  # Variable to store the text of the entire line
             for span in line["spans"]:
                 text = span["text"].strip()
-                font_size = span["size"]
+                line_text += text + " "  # Append the text of each span to the line_text variable
 
                 if normal_font is None:
                     normal_font = span["font"]
@@ -228,33 +230,61 @@ def parse_resume(file_path):
                 if span["font"] != normal_font:
                     span_data["font"] = span["font"]  # Include font only if it's different from the normal font
 
-            new_current_section = is_section_heading(line, avg_font_size)    
-            if new_current_section is not None and new_current_section is not current_section:  
-                current_section = new_current_section
-                resume_data["sections"][current_section] = []
-                current_subsection = None # Reset subsection for a new section found
-                # Note: This allows for immediate following text to be processed without skipping
-                # Note: We want to check if were at a new section for every line in case the block contains two sections
+                new_current_section = is_section_heading(line, avg_font_size)    
+                if new_current_section is not None and new_current_section is not current_section:  
+                    current_section = new_current_section
+                    resume_data["sections"][current_section] = []
+                    current_subsection = None # Reset subsection for a new section found
+                    # Note: This allows for immediate following text to be processed without skipping
+                    # Note: We want to check if were at a new section for every line in case the block contains two sections
 
 
-            # Check for dates within the text, indicating a subsection
-            date_match = date_regex.search(text)
-            if date_match and current_section is not None:
-                # New subsection identified by a date
-                current_subsection = {"date": date_match.group(), "content": []}
-                resume_data["sections"][current_section].append(current_subsection)
-            if current_subsection is not None:
-                # Append content to the current subsection
-                    current_subsection["content"].append(span_data)
-            elif current_section is not None:
-                # Append content to the current section if not in a subsection
-                    resume_data["sections"][current_section].append(span_data)
-            # Additional logic here for handling text that doesn't fit as a subsection or section content
+                # Check for dates within the text, indicating a subsection
+                date_match = date_regex.search(text)
+                if date_match and current_section is not None:
+                    # New subsection identified by a date
+                    current_subsection = {"date": date_match.group(), "content": []}
+                    resume_data["sections"][current_section].append(current_subsection)
+                if current_subsection is not None:
+                    # Append content to the current subsection
+                        current_subsection["content"].append(span_data)
+                elif current_section is not None:
+                    # Append content to the current section if not in a subsection
+                        resume_data["sections"][current_section].append(span_data)
+                # Additional logic here for handling text that doesn't fit as a subsection or section content
+                    
+                line_data = {
+                    "text": line_text.strip(),  # Store the entire line text
+                    "size": line["spans"][0]["size"],  # Use the size of the first span as the line size
+                    "color": line["spans"][0]["color"],  # Use the color of the first span as the line color
+                    "flags": line["spans"][0]["flags"]  # Use the flags of the first span as the line flags
+                }
+                if current_subsection is not None:
+                    current_subsection["content"].append(line_data)
+                elif current_section is not None:
+                    resume_data["sections"][current_section].append(line_data)
 
     doc.close()
     return resume_data
 
+def print_sections(data, indent=""):
+    for key, value in data.items():
+        if key == "sections":
+            for section, section_data in value.items():
+                print(f"{indent}{section}")
+                print_subsections(section_data, indent + "  ")
+        elif isinstance(value, dict):
+            print_sections(value, indent + "  ")
+
+def print_subsections(section_data, indent=""):
+    for item in section_data:
+        if isinstance(item, dict) and "date" in item:
+            print(f"{indent}{item['date']}")
+            print_subsections(item["content"], indent + "  ")
+        else:
+            print(f"{indent}{item['text']}")
+
 # Usage example
 file_path = "PDFtoLaTeX\PDFParser\Elijah Resume.pdf"
 resume_data = parse_resume(file_path)
-print(resume_data)
+print_sections(resume_data)
