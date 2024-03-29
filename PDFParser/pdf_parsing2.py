@@ -34,6 +34,87 @@ Text blocks are structured differently to provide detailed information about the
         -color: The text color, encoded in sRGB format.
         -text: The actual text content of the span.
         -chars: (Optional) A list of character dictionaries if the extraction mode provides it.
+
+
+
+resume_datas tructure
+│
+├── top_section
+│   ├── name
+│   ├── contact
+│   └── links
+│       ├── [0]
+│       │   ├── text
+│       │   └── uri
+│       ├── [1]
+│       │   ├── text
+│       │   └── uri
+│       ├── [2]
+│       │   ├── text
+│       │   └── uri
+│       ├── [3]
+│       │   ├── text
+│       │   └── uri
+│       └── [4]
+│           ├── text
+│           └── uri
+│
+└── sections
+    ├── Default
+    │   ├── [0]
+    │   │   ├── text
+    │   │   ├── font
+    │   │   ├── size
+    │   │   ├── color
+    │   │   └── flags
+    │   ├── [1]
+    │   │   ├── text
+    │   │   ├── font
+    │   │   ├── size
+    │   │   ├── color
+    │   │   └── flags
+    │   ├── ...
+    │   └── [60]
+    │       ├── text
+    │       ├── font
+    │       ├── size
+    │       ├── color
+    │       └── flags
+    ├── education
+    │   └── [0]
+    │       ├── text
+    │       ├── font
+    │       ├── size
+    │       ├── color
+    │       └── flags
+    ├── skills
+    │   └── [0]
+    │       ├── text
+    │       ├── font
+    │       ├── size
+    │       ├── color
+    │       └── flags
+    ├── languages
+    │   └── [0]
+    │       ├── text
+    │       ├── font
+    │       ├── size
+    │       ├── color
+    │       └── flags
+    ├── experience
+    │   └── [0]
+    │       ├── text
+    │       ├── font
+    │       ├── size
+    │       ├── color
+    │       └── flags
+    └── projects
+        └── [0]
+            ├── text
+            ├── font
+            ├── size
+            ├── color
+            └── flags
 """
 import fitz
 import re
@@ -75,7 +156,7 @@ def parse_top_section(page):
 
     text = page.get_text("blocks")
     top_section = text[0][4].split("\n")
-    resume_data["name"] = top_section[0]
+    top_section_data["name"] = top_section[0]  # Use top_section_data instead of resume_data
 
     # regex expressions
     phone_regex = re.compile(r"\+?\d{1,3}[-.\s]?\d{1,3}[-.\s]?\d{1,4}[-.\s]?\d{1,4}")
@@ -116,6 +197,7 @@ def parse_resume(file_path):
     text_blocks = page.get_text("dict")["blocks"]
     avg_font_size = get_average_font_size(text_blocks)
     current_section = None
+    normal_font = None
     
 
     # Regex to be used to identify when a date is present 
@@ -134,10 +216,23 @@ def parse_resume(file_path):
                 text = span["text"].strip()
                 font_size = span["size"]
 
+                if normal_font is None:
+                    normal_font = span["font"]
+
+                span_data = {
+                    "text": text,
+                    "size": span["size"],
+                    "color": span["color"],
+                    "flags": span["flags"]
+                }
+                if span["font"] != normal_font:
+                    span_data["font"] = span["font"]  # Include font only if it's different from the normal font
+
             new_current_section = is_section_heading(line, avg_font_size)    
             if new_current_section is not None and new_current_section is not current_section:  
+                current_section = new_current_section
                 resume_data["sections"][current_section] = []
-                current_subSection = None # Reset subsection for a new section found
+                current_subsection = None # Reset subsection for a new section found
                 # Note: This allows for immediate following text to be processed without skipping
                 # Note: We want to check if were at a new section for every line in case the block contains two sections
 
@@ -148,9 +243,12 @@ def parse_resume(file_path):
                 # New subsection identified by a date
                 current_subsection = {"date": date_match.group(), "content": []}
                 resume_data["sections"][current_section].append(current_subsection)
-            elif current_subsection is not None:
+            if current_subsection is not None:
                 # Append content to the current subsection
-                current_subsection["content"].append(text)
+                    current_subsection["content"].append(span_data)
+            elif current_section is not None:
+                # Append content to the current section if not in a subsection
+                    resume_data["sections"][current_section].append(span_data)
             # Additional logic here for handling text that doesn't fit as a subsection or section content
 
     doc.close()
